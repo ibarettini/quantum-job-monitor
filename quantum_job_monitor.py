@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 # CONFIGURACIÓN - Edita estos valores
 # ============================================================
 
-EMAIL_FROM = "inakibarettinigmail.com"        # Tu Gmail
+EMAIL_FROM = "inakibarettini@gmail.com"        # Tu Gmail
 EMAIL_TO   = "inakibarettini@gmail.com"        # Donde recibes el resumen
 import os
 GMAIL_APP_PASSWORD = os.environ.get("GMAIL_PASSWORD", "")  # App Password de Gmail (sin espacios internos)
