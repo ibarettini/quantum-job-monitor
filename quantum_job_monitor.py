@@ -17,9 +17,9 @@ from bs4 import BeautifulSoup
 # CONFIGURACIÓN - Edita estos valores
 # ============================================================
 
-EMAIL_FROM = "tu_email@gmail.com"        # Tu Gmail
-EMAIL_TO   = "tu_email@gmail.com"        # Donde recibes el resumen
-GMAIL_APP_PASSWORD = "TU_APP_PASSWORD_AQUI"  # App Password de Gmail (sin espacios internos)
+EMAIL_FROM = "inakibarettinigmail.com"        # Tu Gmail
+EMAIL_TO   = "inakibarettini@gmail.com"        # Donde recibes el resumen
+GMAIL_APP_PASSWORD = "xovl tyyw omvc mjjj"  # App Password de Gmail (sin espacios internos)
 
 # Palabras clave para roles (cualquiera de estas)
 ROLE_KEYWORDS = [
