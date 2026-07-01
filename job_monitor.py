@@ -82,19 +82,28 @@ COUNTRY_KEYWORDS = [
 # Excluir estas empresas
 EXCLUDE_COMPANIES = [
     "quantum systems",
+    "powerquark",
+    "quantum leap",
 ]
 
 # Excluir estos tipos de rol
 EXCLUDE_ROLE_KEYWORDS = [
+    # Roles que no encajan
     "risk manager", "business continuity", "situation monitoring",
     "sales manager automotive", "sales manager apac", "sales manager japan",
     "sales manager korea", "air quality", "earth science", "forecast",
+    "regional sales manager", "sales account manager",
+    "senior sales executive", "sales executive",
+    # Roles puramente técnicos
     "phd", "postdoc", "postdoctoral", "research scientist",
     "software engineer", "hardware engineer", "lab technician",
     "internship", "praktikum", "undergraduate", "student",
     "process engineer", "design engineer", "test engineer",
     "layout engineer", "verification engineer", "rtl designer",
+    "asic", "fpga engineer", "r&d engineer",
+    # Roles administrativos irrelevantes
     "office manager", "data manager fair", "r1)", "r0)", "r2)",
+    "product sales enablement", "sales enablement",
 ]
 
 # ============================================================
@@ -284,7 +293,7 @@ def is_excluded(job):
     title = job['title'].lower()
     company = job['company'].lower()
 
-    # Excluir empresas
+    # Excluir empresas conocidas que no son quantum real
     if any(exc in company for exc in EXCLUDE_COMPANIES):
         return True
 
@@ -295,9 +304,39 @@ def is_excluded(job):
     return False
 
 
+def is_real_quantum(job):
+    """Verifica que 'quantum' en el nombre sea quantum real, no un falso positivo"""
+    company = job['company'].lower()
+    title = job['title'].lower()
+    text = f"{title} {company}"
+
+    # Si tiene quantum en el nombre, verificar que sea tecnología cuántica real
+    if "quantum" in company:
+        # Empresas conocidas del sector quantum
+        real_quantum_companies = [
+            "iqm", "zurich instruments", "quantum machines", "oxford quantum",
+            "alice & bob", "pasqal", "planqc", "quantinuum", "ionq",
+            "mesa quantum", "quantum motion", "quera", "infleqtion",
+            "lux quantum", "quside", "quantum computing", "quantum network",
+            "quantum sensing", "quantum communication",
+        ]
+        # Si no es empresa quantum conocida, verificar por tecnología
+        if not any(q in company for q in real_quantum_companies):
+            quantum_tech_signals = [
+                "qubit", "quantum computer", "quantum computing",
+                "quantum communication", "quantum sensing", "qkd",
+                "quantum network", "superconducting", "photonic quantum",
+            ]
+            if not any(q in text for q in quantum_tech_signals):
+                return False
+    return True
+
+
 def is_quantum(job):
     text = f"{job['title']} {job['company']} {job['location']}".lower()
     if is_excluded(job):
+        return False
+    if not is_real_quantum(job):
         return False
     has_quantum = any(kw in text for kw in QUANTUM_SECTOR_KEYWORDS)
     has_role = any(kw in text for kw in ROLE_KEYWORDS)
