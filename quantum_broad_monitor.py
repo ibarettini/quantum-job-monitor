@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Broad Tech Job Monitor v2
+Broad Tech Job Monitor v3
+LinkedIn + ETH Zurich + BSC + NXP + Infineon
 Semiconductors, Security, Cryptography, Identity, Payments, Deep Tech + Quantum BD
 """
 
@@ -30,27 +31,21 @@ ROLE_KEYWORDS = [
     "quantum solutions", "quantum ecosystem", "quantum commercialization",
     "quantum partnerships", "exploitation manager", "valorisation",
     "knowledge transfer", "alliance manager", "channel manager",
-    "product line manager", "segment manager",
+    "product line manager", "segment manager", "chief of staff",
+    "project manager", "director", "manager", "head of", "coordinator",
 ]
 
 SECTOR_KEYWORDS = [
-    # Quantum
     "quantum", "qkd", "post-quantum",
-    # Semiconductors
     "semiconductor", "microelectronics", "chip", "soc", "microcontroller",
     "fpga", "asic", "embedded security", "secure element", "nfc", "ble",
-    # Security & Cryptography
     "cybersecurity", "cryptography", "pki", "hsm", "encryption",
     "security electronics", "hardware security", "post-quantum cryptography",
-    # Identity & Payments
     "digital identity", "authentication", "identity management",
     "payment systems", "fintech", "smart card", "emv", "contactless",
     "biometrics", "access control", "physical security",
-    # Photonics & Deep Tech
     "photonics", "optics", "deep tech", "iot", "iiot",
-    # Defense & Dual Use
     "defense tech", "dual use", "sovereign", "critical infrastructure",
-    # Companies as sector signals
     "nxp", "infineon", "stmicroelectronics", "st micro",
     "ams-osram", "ams osram", "bosch semiconductor",
     "nordic semiconductor", "melexis", "elmos", "trumpf",
@@ -67,6 +62,7 @@ COUNTRY_KEYWORDS = [
     "uk", "london", "oxford", "cambridge", "reading",
     "belgium", "leuven",
     "finland", "espoo",
+    "spain", "barcelona", "madrid",
     "remote", "hybrid", "europe", "european", "emea",
 ]
 
@@ -74,7 +70,8 @@ EXCLUDE_KEYWORDS = [
     "phd position", "postdoc", "research scientist", "software engineer",
     "hardware engineer", "lab technician", "internship", "praktikum",
     "process engineer", "design engineer", "test engineer", "layout engineer",
-    "verification engineer", "rtl designer",
+    "verification engineer", "rtl designer", "undergraduate", "student",
+    "r1)", "r0)", "r2)",
 ]
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
@@ -120,73 +117,51 @@ def fetch_linkedin():
     return jobs
 
 
-def fetch_fraunhofer():
-    jobs = []
-    keywords = ["business development", "tech transfer", "innovation manager",
-                "licensing", "exploitation", "partnership", "commercialization"]
-    for kw in keywords:
-        try:
-            url = f"https://jobs.fraunhofer.de/suche?q={requests.utils.quote(kw)}"
-            r = requests.get(url, headers=HEADERS, timeout=10)
-            soup = BeautifulSoup(r.text, "html.parser")
-            for card in soup.find_all(["div", "li", "article"], class_=re.compile("job|result|item")):
-                title = card.find(["h2", "h3", "h4", "a"])
-                link = card.find("a", href=True)
-                location = card.find(class_=re.compile("location|ort"))
-                if title:
-                    jobs.append({
-                        "title": title.get_text(strip=True),
-                        "company": "Fraunhofer",
-                        "location": location.get_text(strip=True) if location else "Germany",
-                        "url": "https://jobs.fraunhofer.de" + link["href"] if link and link["href"].startswith("/") else (link["href"] if link else ""),
-                        "source": "Fraunhofer"
-                    })
-        except Exception as e:
-            print(f"Fraunhofer error: {e}")
-    return jobs
-
-
-def fetch_imec():
-    jobs = []
-    try:
-        url = "https://www.imec-int.com/en/careers/job-opportunities"
-        r = requests.get(url, headers=HEADERS, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
-        for card in soup.find_all(["div", "li", "article"], class_=re.compile("job|vacancy|card")):
-            title = card.find(["h2", "h3", "h4", "a"])
-            link = card.find("a", href=True)
-            if title:
-                jobs.append({
-                    "title": title.get_text(strip=True),
-                    "company": "imec",
-                    "location": "Belgium / Europe",
-                    "url": link["href"] if link else "https://www.imec-int.com/en/careers",
-                    "source": "imec"
-                })
-    except Exception as e:
-        print(f"imec error: {e}")
-    return jobs
-
-
 def fetch_eth_zurich():
     jobs = []
     try:
-        url = "https://jobs.ethz.ch/job/search?q=business+development"
+        url = "https://jobs.ethz.ch/site/index"
         r = requests.get(url, headers=HEADERS, timeout=10)
         soup = BeautifulSoup(r.text, "html.parser")
-        for card in soup.find_all(["div", "li", "article"], class_=re.compile("job|result|item")):
-            title = card.find(["h2", "h3", "h4", "a"])
-            link = card.find("a", href=True)
-            if title:
-                jobs.append({
-                    "title": title.get_text(strip=True),
-                    "company": "ETH Zurich",
-                    "location": "Zurich, Switzerland",
-                    "url": "https://jobs.ethz.ch" + link["href"] if link and link["href"].startswith("/") else (link["href"] if link else ""),
-                    "source": "ETH Zurich"
-                })
+        all_links = soup.find_all("a", href=True)
+        job_links = [l for l in all_links if "/job/view/" in l.get('href', '')]
+        for link in job_links:
+            title = link.get_text(strip=True)
+            title_clean = title.split("100%")[0].split("80%")[0].split("60%")[0].strip()
+            href = link['href']
+            full_url = f"https://jobs.ethz.ch{href}" if href.startswith('/') else href
+            jobs.append({
+                "title": title_clean,
+                "company": "ETH Zurich",
+                "location": "Zurich, Switzerland",
+                "url": full_url,
+                "source": "ETH Zurich"
+            })
     except Exception as e:
         print(f"ETH Zurich error: {e}")
+    return jobs
+
+
+def fetch_bsc():
+    jobs = []
+    try:
+        url = "https://www.bsc.es/join-us/job-opportunities"
+        r = requests.get(url, headers=HEADERS, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+        all_links = soup.find_all("a", href=True)
+        job_links = [l for l in all_links if "/job-opportunities/" in l.get('href', '')
+                     and l.get_text(strip=True)
+                     and len(l.get_text(strip=True)) > 10]
+        for link in job_links:
+            jobs.append({
+                "title": link.get_text(strip=True),
+                "company": "BSC Barcelona Supercomputing Center",
+                "location": "Barcelona, Spain",
+                "url": link['href'],
+                "source": "BSC"
+            })
+    except Exception as e:
+        print(f"BSC error: {e}")
     return jobs
 
 
@@ -242,33 +217,26 @@ def fetch_infineon():
 
 def is_relevant(job):
     text = f"{job['title']} {job['company']} {job['location']}".lower()
-
     for kw in EXCLUDE_KEYWORDS:
         if kw in text:
             return False
-
     has_sector = any(kw in text for kw in SECTOR_KEYWORDS)
     if not has_sector:
         return False
-
     has_role = any(kw in text for kw in ROLE_KEYWORDS)
     if not has_role:
         return False
-
     has_location = any(kw in text for kw in COUNTRY_KEYWORDS)
     if not has_location:
         return False
-
     return True
 
 
 def is_relevant_institutional(job):
     text = f"{job['title']} {job['company']}".lower()
-
     for kw in EXCLUDE_KEYWORDS:
         if kw in text:
             return False
-
     has_role = any(kw in text for kw in ROLE_KEYWORDS)
     return has_role
 
@@ -279,7 +247,6 @@ def is_relevant_institutional(job):
 
 def send_email(jobs):
     today = datetime.now().strftime("%d/%m/%Y")
-
     if not jobs:
         subject = f"🔍 Broad Tech Monitor – {today} – Sin novedades"
         body_html = f"""
@@ -318,8 +285,8 @@ def send_email(jobs):
         </table>
         <br>
         <p style="color:#888;font-size:12px;">
-            Sectores: Semiconductores | Seguridad | Criptografía | Identidad Digital | Pagos | Fotónica | Deep Tech | Quantum BD |
-            DE / CH / AT / NL / FR / UK / BE / Remote
+            Fuentes: LinkedIn | ETH Zurich | BSC | NXP | Infineon |
+            Sectores: Semiconductores | Seguridad | Criptografía | Identidad | Pagos | Fotónica | Deep Tech | Quantum
         </p>
         </body></html>
         """
@@ -329,12 +296,10 @@ def send_email(jobs):
     msg["From"] = EMAIL_FROM
     msg["To"] = EMAIL_TO
     msg.attach(MIMEText(body_html, "html"))
-
     password = GMAIL_APP_PASSWORD.replace(" ", "")
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(EMAIL_FROM, password)
         server.sendmail(EMAIL_FROM, EMAIL_TO, msg.as_string())
-
     print(f"Email enviado: {subject}")
 
 
@@ -343,20 +308,19 @@ def send_email(jobs):
 # ============================================================
 
 if __name__ == "__main__":
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando búsqueda broad tech...")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando búsqueda broad tech v3...")
 
-    all_jobs = []
-    all_jobs += fetch_linkedin()
+    general_jobs = []
+    general_jobs += fetch_linkedin()
 
-    institutional = []
-    institutional += fetch_fraunhofer()
-    institutional += fetch_imec()
-    institutional += fetch_eth_zurich()
-    institutional += fetch_nxp()
-    institutional += fetch_infineon()
+    institutional_jobs = []
+    institutional_jobs += fetch_eth_zurich()
+    institutional_jobs += fetch_bsc()
+    institutional_jobs += fetch_nxp()
+    institutional_jobs += fetch_infineon()
 
-    relevant_general = [j for j in all_jobs if is_relevant(j)]
-    relevant_institutional = [j for j in institutional if is_relevant_institutional(j)]
+    relevant_general = [j for j in general_jobs if is_relevant(j)]
+    relevant_institutional = [j for j in institutional_jobs if is_relevant_institutional(j)]
 
     all_relevant = relevant_general + relevant_institutional
 
@@ -368,7 +332,7 @@ if __name__ == "__main__":
             seen.add(key)
             unique.append(j)
 
-    print(f"Total antes de filtrar: {len(all_jobs) + len(institutional)}")
+    print(f"Total antes de filtrar: {len(general_jobs) + len(institutional_jobs)}")
     print(f"Ofertas relevantes: {len(unique)}")
 
     send_email(unique)
